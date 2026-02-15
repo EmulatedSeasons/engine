@@ -2,10 +2,12 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 #include <stdio.h>
+#include <stdint.h>
 #include <stdlib.h>
 
 static SDL_Window* window = nullptr;
 static SDL_GLContext glcontext = nullptr;
+static const uint64_t fpstarget = (1000 * SDL_NS_PER_MS) / 60;
 
 int main(int argc, char* argv[]) {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -37,6 +39,7 @@ int main(int argc, char* argv[]) {
     bool quit = false;
     SDL_Event event;
     while (!quit) {
+        uint64_t startFrame = SDL_GetTicksNS();
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_EVENT_QUIT) {
                 quit = true;
@@ -47,6 +50,11 @@ int main(int argc, char* argv[]) {
         glClear(GL_COLOR_BUFFER_BIT);
 
         SDL_GL_SwapWindow(window);
+
+        uint64_t endFrame = SDL_GetTicksNS();
+        if (endFrame - startFrame < fpstarget) {
+            SDL_DelayPrecise(fpstarget - (endFrame - startFrame));
+        }
     }
 
     // SDL_Quit();
